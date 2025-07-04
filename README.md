@@ -90,7 +90,7 @@ http://localhost:8080
 
 🐳 Docker ile Çalıştırma (Opsiyonel)
 docker build -t ecommerce-api .
-docker run -p 8080:8080 ecommerce-api![ecommercec4 drawio](https://github.com/user-attachments/assets/714687d2-4739-434a-a662-30f570628fd4)
+docker run -p 8080:8080 ecommerce-api
 
 🗄️ Veritabanı Erişimi (H2 Console)
 http://localhost:8080/h2-console
@@ -114,9 +114,9 @@ mvn test
 
 🧱 Proje Yapısı (Basit Akış)
 Client (Postman) ──▶ Controller ──▶ Service ──▶ Repository ──▶ DB
-                                        │
-                                        ▼
-                                 JWT Provider ◀── Security Layer
+                          		  │
+                          		  ▼
+                   		     JWT Provider ◀── Security Layer
 
 
 ✉️ İletişim
