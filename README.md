@@ -114,12 +114,6 @@ http://localhost:8080/swagger-ui/index.html
 - Testleri çalıştırmak için:
 mvn test
 
-🧱 Proje Yapısı (Basit Akış)
-Client (Postman) ──▶ Controller ──▶ Service ──▶ Repository ──▶ DB
-                          		  │
-                          		  ▼
-                   		     JWT Provider ◀── Security Layer
-
 
 ✉️ İletişim
 
