@@ -1,4 +1,6 @@
 
+![Mimari Şema](./ecommercemodel.png)
+
 🛒 E-Ticaret API Projesi
 
 Bu proje, Spring Boot kullanılarak geliştirilmiş, temel bir e-ticaret uygulamasının RESTful API'sidir. Ürün yönetimi, sipariş işlemleri ve kullanıcı kimlik doğrulama/yetkilendirme gibi temel e-ticaret fonksiyonelliklerini sağlar.
