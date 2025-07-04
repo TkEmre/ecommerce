@@ -1,164 +1,123 @@
-E-ticaret API Projesi
-Bu proje, Spring Boot kullanılarak geliştirilmiş, temel bir e-ticaret uygulamasının RESTful API'sidir. Ürün yönetimi, sipariş işlemleri ve kullanıcı kimlik doğrulama/yetkilendirme gibi temel e-ticaret fonksiyonelliklerini sağlamaktadır.
+
+🛒 E-Ticaret API Projesi
+
+Bu proje, Spring Boot kullanılarak geliştirilmiş, temel bir e-ticaret uygulamasının RESTful API'sidir. Ürün yönetimi, sipariş işlemleri ve kullanıcı kimlik doğrulama/yetkilendirme gibi temel e-ticaret fonksiyonelliklerini sağlar.
 
 🚀 Teknolojiler
-Java 23: Programlama dili
-
-Spring Boot 3.2.5: Hızlı uygulama geliştirme çerçevesi
-
-Spring Data JPA
-
-Spring Web
-
-Spring Security (JWT tabanlı)
-
-Spring Validation
-
-Hibernate: JPA implementasyonu
-
-H2 Database: Geliştirme ve test ortamı için in-memory veritabanı
-
-Lombok: Boilerplate kodu azaltmak için
-
-JJWT: JSON Web Token işlemleri için
-
-Springdoc OpenAPI (Swagger UI): API dokümantasyonu için
-
-Maven: Bağımlılık yönetimi ve proje derleme
-
-JUnit 5 & MockMvc: Unit ve Integration testleri için
-
-Docker: Uygulamayı konteynerize etmek için
+- Java 23
+- Spring Boot 3.2.5
+- Spring Web
+- Spring Data JPA
+- Spring Security (JWT tabanlı)
+- Spring Validation
+- Hibernate
+- H2 Database (in-memory, dev/test için)
+- Lombok
+- JJWT (JWT işlemleri için)
+- Springdoc OpenAPI (Swagger UI)
+- Maven
+- JUnit 5 & MockMvc
+- Docker
 
 🏗️ Mimari
-Proje, temiz kod prensipleri ve SOLID prensiplerine uygun olarak katmanlı mimari (Layered Architecture) ile tasarlanmıştır:
 
-Controller Katmanı: Gelen HTTP isteklerini karşılar, DTO'ları kullanarak giriş verilerini alır ve servis katmanına yönlendirir. Yanıtları HTTP formatında döndürür.
+Proje, SOLID ve temiz kod prensiplerine uygun olarak katmanlı mimari ile tasarlanmıştır:
 
-Service Katmanı: İş mantığını içerir. Controller'dan gelen istekleri işler, Repository katmanı ile iletişim kurar ve iş akışını yönetir. Transactional işlemler burada yönetilir.
+🔹 Controller Katmanı
+- HTTP isteklerini alır, DTO'lar üzerinden verileri işler.
+- Servis katmanına yönlendirir, HTTP yanıtı döner.
 
-Repository Katmanı: Veritabanı ile doğrudan iletişim kurar. Spring Data JPA sayesinde CRUD (Create, Read, Update, Delete) operasyonları kolayca gerçekleştirilir.
+🔹 Service Katmanı
+- İş mantığı burada yer alır.
+- Controller'dan gelen istekleri işler, Repository katmanı ile çalışır.
+- Transaction yönetimi buradadır.
 
-Model Katmanı: Veritabanı tablolarını temsil eden JPA varlıklarını (Entities) içerir.
+🔹 Repository Katmanı
+- Veritabanı işlemlerini gerçekleştirir.
+- Spring Data JPA sayesinde CRUD işlemleri otomatikleştirilir.
 
-DTO (Data Transfer Object) Katmanı: Katmanlar arasında veri transferi için kullanılan nesnelerdir. Bu, hassas verilerin açığa çıkmasını engeller ve API'nin esnekliğini artırır.
+🔹 Model / Entity Katmanı
+- JPA Entity'lerini içerir (veritabanı tabloları).
 
-✨ Özellikler ve API Endpoint'leri
-Uygulama aşağıdaki temel RESTful API endpoint'lerini sunmaktadır:
+🔹 DTO (Data Transfer Object) Katmanı
+- Katmanlar arasında veri taşır.
+- Hassas verilerin dışa açılmasını engeller.
 
-1. Ürün İşlemleri (/api/v1/products)
-GET /: Tüm ürünleri listeler (sayfalama ve sıralama destekli).
+✨ Özellikler ve API Endpoint’leri
 
-GET /{id}: Belirli bir ID'ye sahip ürünü getirir.
+📦 Ürün İşlemleri (/api/v1/products)
+- GET /: Tüm ürünleri listeler (sayfalama + sıralama destekli)
+- GET /{id}: Belirli ürünü getirir
+- POST /: Yeni ürün ekler (🔐 ADMIN)
+- PUT /{id}: Ürünü günceller (🔐 ADMIN)
+- DELETE /{id}: Ürünü siler (🔐 ADMIN)
+- GET /category/{category}: Kategoriye göre ürün listeler
+- PATCH /{id}/stock: Stok miktarını günceller (🔐 ADMIN)
 
-POST /: Yeni bir ürün ekler. (ADMIN Yetkisi Gerekli)
+🧾 Sipariş İşlemleri (/api/v1/orders)
+- POST /: Yeni sipariş oluşturur (🔐 USER / ADMIN)
+- GET /{id}: Sipariş detaylarını getirir (🔐 Kullanıcı kendi, admin hepsini)
+- GET /user/{username}: Kullanıcıya ait siparişleri listeler (🔐 Kullanıcı kendi, admin hepsini)
+- PUT /{id}/status: Sipariş durumunu günceller (🔐 ADMIN)
+- DELETE /{id}: Siparişi iptal eder (stok geri eklenir) (🔐 USER / ADMIN)
+- DELETE /{id}/admin: Siparişi tamamen siler (🔐 ADMIN)
 
-PUT /{id}: Belirli bir ID'ye sahip ürünü günceller. (ADMIN Yetkisi Gerekli)
-
-DELETE /{id}: Belirli bir ID'ye sahip ürünü siler. (ADMIN Yetkisi Gerekli)
-
-GET /category/{category}: Belirli bir kategoriye ait ürünleri listeler.
-
-PATCH /{id}/stock: Belirli bir ürünün stok miktarını günceller. (ADMIN Yetkisi Gerekli)
-
-2. Sipariş İşlemleri (/api/v1/orders)
-POST /: Yeni bir sipariş oluşturur. (USER/ADMIN Yetkisi Gerekli)
-
-GET /{id}: Belirli bir siparişin detaylarını getirir. (Kullanıcı kendi siparişini, Admin tüm siparişleri görebilir)
-
-GET /user/{username}: Belirli bir kullanıcının siparişlerini listeler. (Kullanıcı kendi siparişlerini, Admin tüm siparişleri görebilir)
-
-PUT /{id}/status: Belirli bir siparişin durumunu günceller. (ADMIN Yetkisi Gerekli)
-
-DELETE /{id}: Belirli bir siparişi iptal eder (stokları geri ekler). (USER/ADMIN Yetkisi Gerekli)
-
-DELETE /{id}/admin: Belirli bir siparişi veritabanından tamamen siler. (ADMIN Yetkisi Gerekli)
-
-3. Kullanıcı İşlemleri (/api/v1/auth, /api/v1/users)
-POST /api/v1/auth/register: Yeni bir kullanıcı kaydı yapar.
-
-POST /api/v1/auth/login: Kullanıcı girişi yapar ve JWT token döndürür.
-
-GET /api/v1/users/profile: Kimliği doğrulanmış kullanıcının profil bilgilerini getirir.
-
-PUT /api/v1/users/profile: Kimliği doğrulanmış kullanıcının profil bilgilerini günceller.
-
-POST /api/v1/users/address: Kimliği doğrulanmış kullanıcıya yeni bir adres ekler.
+👤 Kullanıcı İşlemleri (/api/v1/auth, /api/v1/users)
+- POST /auth/register: Yeni kullanıcı kaydı
+- POST /auth/login: Giriş yapar, JWT döner
+- GET /users/profile: Kullanıcı profili (🔐 Giriş yapılmış kullanıcı)
+- PUT /users/profile: Profili günceller (🔐 Giriş yapılmış kullanıcı)
+- POST /users/address: Adres ekler (🔐 Giriş yapılmış kullanıcı)
 
 ⚙️ Kurulum ve Çalıştırma
-Ön Koşullar
-Java 23 JDK
 
-Maven
+✅ Ön Koşullar
+- Java 23 JDK
+- Maven
+- Docker (isteğe bağlı)
+- Git
 
-Docker (isteğe bağlı, Docker ile çalıştırmak isterseniz)
-
-Git
-
-Yerel Kurulum
-Projeyi Klonlayın:
-
+📥 Projeyi Klonlayın
 git clone <proje_depo_url_buraya>
 cd ecommerce
 
-Bağımlılıkları Yükleyin:
-
+📦 Bağımlılıkları Yükleyin
 mvn clean install
 
-Uygulamayı Çalıştırın:
-
+▶️ Uygulamayı Çalıştırın
 mvn spring-boot:run
+http://localhost:8080
 
-Uygulama varsayılan olarak http://localhost:8080 adresinde çalışacaktır.
-
-Docker ile Çalıştırma
-Docker Görüntüsünü Oluşturun:
-
+🐳 Docker ile Çalıştırma (Opsiyonel)
 docker build -t ecommerce-api .
+docker run -p 8080:8080 ecommerce-api![ecommercec4 drawio](https://github.com/user-attachments/assets/714687d2-4739-434a-a662-30f570628fd4)
 
-Docker Konteynerini Çalıştırın:
 
-docker run -p 8080:8080 ecommerce-api
-
-Uygulama http://localhost:8080 adresinde Docker konteyneri içinde çalışacaktır.
-
-🗄️ Veritabanı Erişimi (H2 Konsolu)
-Uygulama çalışırken H2 veritabanı konsoluna aşağıdaki adresten erişebilirsiniz:
+🗄️ Veritabanı Erişimi (H2 Console)
 http://localhost:8080/h2-console
+- JDBC URL: jdbc:h2:mem:testdb
+- Kullanıcı: sa
+- Şifre: password
 
-Bağlantı Bilgileri:
+🔐 Güvenlik (JWT)
+- JWT token POST /api/v1/auth/login ile alınır.
+- Authorization header içinde gönderilmelidir:
+  Authorization: Bearer <JWT_TOKEN>
 
-JDBC URL: jdbc:h2:mem:testdb (veya application.properties dosyanızdaki spring.datasource.url değeri)
-
-User Name: sa
-
-Password: password
-
-🔒 Güvenlik
-Uygulama, Spring Security ile JWT (JSON Web Token) tabanlı kimlik doğrulama ve rol tabanlı yetkilendirme (@PreAuthorize) kullanmaktadır.
-
-Kullanıcılar POST /api/v1/auth/login endpoint'inden JWT token alarak korumalı API'lere erişebilirler.
-
-Token, Authorization başlığında Bearer <TOKEN> formatında gönderilmelidir.
-
-Sistemde USER ve ADMIN rolleri bulunmaktadır. Belirli işlemler (ürün ekleme/güncelleme/silme, sipariş durumu güncelleme vb.) sadece ADMIN rolüne sahip kullanıcılar tarafından yapılabilir.
-
-📄 API Dokümantasyonu (Swagger/OpenAPI)
-Uygulama çalışırken, API dokümantasyonuna Swagger UI üzerinden erişebilirsiniz:
-http://localhost:8080/swagger-ui.html
-
-Bu arayüz, tüm API endpoint'lerini, beklenen istek formatlarını ve olası yanıtları görsel olarak sunar. Ayrıca buradan doğrudan API istekleri de gönderebilirsiniz.
+📄 API Dokümantasyonu (Swagger UI)
+http://localhost:8080/swagger-ui/index.html
 
 🧪 Testler
-Proje, hem birim (Unit) hem de entegrasyon (Integration) testlerini içermektedir:
-
-Unit Testler: Servis katmanındaki iş mantığını izole bir şekilde test eder. (Örn: ProductServiceTest.java)
-
-Integration Testler: Controller katmanı ve veritabanı entegrasyonu dahil olmak üzere uçtan uca senaryoları test eder. (Örn: ProductControllerIT.java, OrderControllerIT.java)
-
-Testleri çalıştırmak için:
-
+- Unit Testler: Servis sınıfları (örnek: ProductServiceTest)
+- Integration Testler: Controller + DB ile uçtan uca (örnek: OrderControllerIT)
+- Testleri çalıştırmak için:
 mvn test
+
+🧱 Proje Yapısı (Basit Akış)
+Client (Postman) ──▶ Controller ──▶ Service ──▶ Repository ──▶ DB
+                                        │
+                                        ▼
+                                 JWT Provider ◀── Security Layer
 
 
 ✉️ İletişim
