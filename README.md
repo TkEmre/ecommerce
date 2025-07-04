@@ -167,7 +167,7 @@ Projenin geliştirilmesine katkıda bulunmak isterseniz, lütfen bir "pull reque
 Bu proje MIT Lisansı altında lisanslanmıştır. Daha fazla bilgi için LICENSE dosyasına bakın.
 
 ✉️ İletişim
-Adınız Soyadınız: Emre Tek
 
 E-posta: emretek443@gmail.com
 
+Emre Tek
