@@ -92,7 +92,6 @@ http://localhost:8080
 docker build -t ecommerce-api .
 docker run -p 8080:8080 ecommerce-api![ecommercec4 drawio](https://github.com/user-attachments/assets/714687d2-4739-434a-a662-30f570628fd4)
 
-
 🗄️ Veritabanı Erişimi (H2 Console)
 http://localhost:8080/h2-console
 - JDBC URL: jdbc:h2:mem:testdb
