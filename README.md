@@ -160,11 +160,6 @@ Testleri çalıştırmak için:
 
 mvn test
 
-🤝 Katkıda Bulunma
-Projenin geliştirilmesine katkıda bulunmak isterseniz, lütfen bir "pull request" açmadan önce değişikliklerinizi ayrı bir dalda yapın.
-
-📝 Lisans
-Bu proje MIT Lisansı altında lisanslanmıştır. Daha fazla bilgi için LICENSE dosyasına bakın.
 
 ✉️ İletişim
 
