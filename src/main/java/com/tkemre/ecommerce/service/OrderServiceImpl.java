@@ -1,5 +1,6 @@
 package com.tkemre.ecommerce.service;
 
+import com.tkemre.ecommerce.exception.OutOfStockException;
 import com.tkemre.ecommerce.dto.AddressDto;
 import com.tkemre.ecommerce.dto.CreateOrderRequest;
 import com.tkemre.ecommerce.dto.CreateOrderItemRequest; // Yeni import
@@ -78,8 +79,9 @@ public class OrderServiceImpl implements OrderService {
 
             // Stok kontrolü yap
             if (product.getStock() < quantity) {
-                throw new IllegalArgumentException("Not enough stock for product: " + product.getName() + ". Available: " + product.getStock() + ", Requested: " + quantity);
+                throw new OutOfStockException(product.getName(), quantity, product.getStock());
             }
+
 
             // OrderItem oluştur
             OrderItem orderItem = OrderItem.builder()

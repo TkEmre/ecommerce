@@ -9,7 +9,7 @@ public record AddressRequest(
         String street,
         @NotBlank(message = "City cannot be blank")
         String city,
-        @NotBlank(message = "State cannot be blank") // EKLENDİ
+        @NotBlank(message = "State cannot be blank")
         String state,
         @NotBlank(message = "Postal Code cannot be blank")
         String postalCode,

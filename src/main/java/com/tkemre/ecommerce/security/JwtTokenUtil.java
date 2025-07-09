@@ -6,6 +6,8 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +16,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtTokenUtil {
@@ -22,7 +25,7 @@ public class JwtTokenUtil {
     private String secret;
 
     @Value("${jwt.expiration}")
-    private Long expiration;
+    private Long expiration; // Token geçerlilik süresi (milisaniye)
 
     // Token'dan kullanıcı adını (subject) çıkarır
     public String extractUsername(String token) {
@@ -42,31 +45,40 @@ public class JwtTokenUtil {
 
     // Token'daki tüm claim'leri (iddiaları) çıkarır
     private Claims extractAllClaims(String token) {
-        return Jwts.parser()
+        // JJWT 0.11.0 ve üzeri sürümler için önerilen kullanım Jwts.parserBuilder()
+        return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
-                .build()
+                .build() // Builder'ı build() ile bitirip JwtParser objesini alıyoruz
                 .parseClaimsJws(token)
                 .getBody();
     }
 
-    // Token'ın geçerli olup olmadığını kontrol eder
+    // Token'ın süresinin dolup dolmadığını kontrol eder
     private Boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
-    // Kullanıcıya özel token oluşturur
-    public String generateToken(UserDetails userDetails) {
+    // Kullanıcıya özel token oluşturur (Authentication objesi alarak rolleri de ekler)
+    public String generateToken(Authentication authentication) {
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, userDetails.getUsername());
+        String roles = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(","));
+        claims.put("roles", roles);
+
+        return createToken(claims, authentication.getName());
     }
 
-    // Token oluşturma
+    // Token oluşturma (private helper metot)
     private String createToken(Map<String, Object> claims, String subject) {
+        Date now = new Date(System.currentTimeMillis());
+        Date expiryDate = new Date(now.getTime() + expiration);
+
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -82,4 +94,5 @@ public class JwtTokenUtil {
         byte[] keyBytes = Decoders.BASE64.decode(secret);
         return Keys.hmacShaKeyFor(keyBytes);
     }
+
 }

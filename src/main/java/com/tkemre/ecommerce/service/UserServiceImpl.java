@@ -24,6 +24,13 @@ import java.util.List;
 import java.util.Collections;
 import java.util.stream.Collectors;
 import java.util.HashSet;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -53,19 +60,24 @@ public class UserServiceImpl implements UserService {
             throw new UserAlreadyExistsException("User with username " + request.username() + " already exists.");
         }
 
-        // Yeni kullanıcı oluştur
+        Set<UserRole> roles = request.roles().stream()
+                .map(String::toUpperCase)
+                .map(UserRole::valueOf)
+                .collect(Collectors.toSet());
+
         User user = User.builder()
                 .username(request.username())
                 .password(passwordEncoder.encode(request.password()))
                 .firstName(request.firstName())
                 .lastName(request.lastName())
-                .email(request.email()) // <<< BURAYA DİKKAT! request'ten email'i alıp user'a set etmelisiniz.
-                .roles(new HashSet<>(Collections.singletonList(UserRole.USER)))
+                .email(request.email())
+                .roles(roles)
+                .addresses(new HashSet<>())
                 .build();
 
-        User savedUser = userRepository.save(user);
-        return toUserDto(savedUser);
+        return toUserDto(userRepository.save(user));
     }
+
 
     @Override
     public String login(LoginRequest request) {
@@ -79,7 +91,7 @@ public class UserServiceImpl implements UserService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         // JWT token oluştur ve döndür
-        return jwtTokenUtil.generateToken((User) authentication.getPrincipal());
+        return jwtTokenUtil.generateToken(authentication);
     }
 
     @Override
@@ -97,9 +109,7 @@ public class UserServiceImpl implements UserService {
         user.setFirstName(request.firstName());
         user.setLastName(request.lastName());
         // TODO: Eğer parola da güncellenecekse, buraya ekleyin ve şifrelemeyi unutmayın
-        // if (request.password() != null && !request.password().isEmpty()) {
-        //     user.setPassword(passwordEncoder.encode(request.password()));
-        // }
+
 
         User updatedUser = userRepository.save(user);
         return toUserDto(updatedUser);
@@ -144,6 +154,31 @@ public class UserServiceImpl implements UserService {
         return UserDto.builder()
                 .id(user.getId())
                 .username(user.getUsername())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .roles(user.getRoles())
+                .addresses(addressDtos)
+                .build();
+    }
+    @Override
+    public Page<UserDto> getAllUsers(Pageable pageable) {
+        // UserRepository'den tüm kullanıcıları al ve UserProfileDto'ya dönüştür
+        return userRepository.findAll(pageable)
+                .map(this::toUserProfileDto);
+    }
+    private UserDto toUserProfileDto(User user) {
+        List<AddressDto> addressDtos = user.getAddresses().stream()
+                .map(this::toAddressDto)
+                .collect(Collectors.toList());
+
+        List<String> roleStrings = user.getRoles().stream()
+                .map(Enum::name)
+                .collect(Collectors.toList());
+
+        return UserDto.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .roles(user.getRoles())

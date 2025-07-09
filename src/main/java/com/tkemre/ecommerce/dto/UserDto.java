@@ -11,6 +11,7 @@ public record UserDto(
         String username,
         String firstName,
         String lastName,
+        String email,
         Set<UserRole> roles,
         List<AddressDto> addresses
 ) {}

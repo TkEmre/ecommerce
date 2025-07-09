@@ -6,6 +6,9 @@ import com.tkemre.ecommerce.dto.UserDto;
 import com.tkemre.ecommerce.dto.UpdateUserRequest; // Profil güncelleme için yeni DTO
 import com.tkemre.ecommerce.dto.AddressRequest; // Adres ekleme için yeni DTO
 import com.tkemre.ecommerce.dto.AddressDto; // Adres dönüş DTO'su
+import com.tkemre.ecommerce.model.User;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
 
 public interface UserService {
     UserDto register(RegisterRequest request);
@@ -13,4 +16,5 @@ public interface UserService {
     UserDto getUserProfile(String username); // Kullanıcı profili için
     UserDto updateUserProfile(String username, UpdateUserRequest request); // Profil güncelleme
     AddressDto addAddress(String username, AddressRequest request); // Adres ekleme
+    Page<UserDto> getAllUsers(Pageable pageable);
 }

@@ -2,23 +2,26 @@ package com.tkemre.ecommerce.service;
 
 import com.tkemre.ecommerce.dto.CreateProductRequest;
 import com.tkemre.ecommerce.dto.ProductDto;
+import com.tkemre.ecommerce.dto.UpdateProductRequest;
+import com.tkemre.ecommerce.exception.ProductAlreadyExistsException;
 import com.tkemre.ecommerce.exception.ProductNotFoundException;
 import com.tkemre.ecommerce.model.Product;
 import com.tkemre.ecommerce.repository.ProductRepository;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.*;
+import org.springframework.data.domain.*;
+import org.junit.jupiter.api.AfterEach;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 
 import java.math.BigDecimal;
-import java.util.Optional;
+import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
 class ProductServiceTest {
 
     @Mock
@@ -27,142 +30,188 @@ class ProductServiceTest {
     @InjectMocks
     private ProductServiceImpl productService;
 
+    private AutoCloseable closeable;
+
     @BeforeEach
     void setUp() {
-        reset(productRepository);
+        closeable = MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    void testCreateProduct_shouldReturnProductDto_whenCategoryIsProvided() {
+    void createProduct_successful() {
+        CreateProductRequest request = new CreateProductRequest("Product A", "Category A", BigDecimal.valueOf(100), 10);
 
-        CreateProductRequest request = CreateProductRequest.builder()
-                .name("Test Ürün")
+        when(productRepository.findByNameContainingIgnoreCase("Product A")).thenReturn(Collections.emptyList());
 
-                .price(BigDecimal.valueOf(100.00))
-                .stock(10)
-                .category("Elektronik")
-                .build();
-
-        Product productToSave = Product.builder()
+        Product savedProduct = Product.builder()
+                .id(1L)
                 .name(request.name())
+                .category(request.category())
                 .price(request.price())
                 .stock(request.stock())
-                .category(request.category())
                 .active(true)
                 .build();
-        productToSave.setId(1L);
 
-        when(productRepository.save(any(Product.class))).thenReturn(productToSave);
+        when(productRepository.save(any(Product.class))).thenReturn(savedProduct);
 
         ProductDto result = productService.createProduct(request);
 
-        assertNotNull(result);
-        assertEquals(1L, result.id());
-        assertEquals("Test Ürün", result.name());
-        assertEquals("Elektronik", result.category());
-        assertEquals(10, result.stock());
-        assertEquals(true, result.active());
-
-
-
-        verify(productRepository).save(any(Product.class));
+        assertThat(result.id()).isEqualTo(1L);
+        assertThat(result.name()).isEqualTo("Product A");
     }
 
     @Test
-    void testUpdateProductStock_shouldUpdateStock_whenProductExists() {
-        Long productId = 1L;
-        Integer newQuantity = 15;
+    void createProduct_alreadyExists_throwsException() {
+        CreateProductRequest request = new CreateProductRequest("Product A", "Category A", BigDecimal.TEN, 10);
 
-        Product existingProduct = Product.builder()
-                .id(productId)
-                .name("Mevcut Ürün")
+        Product existing = Product.builder().name("Product A").build();
+        when(productRepository.findByNameContainingIgnoreCase("Product A")).thenReturn(List.of(existing));
 
-                .stock(10)
-                .category("Elektronik")
-                .active(true)
-
-                .build();
-
-        Product updatedProduct = Product.builder()
-                .id(productId)
-                .name("Mevcut Ürün")
-
-                .stock(newQuantity)
-                .category("Elektronik")
-                .active(true)
-                .build();
-
-
-        when(productRepository.findById(productId)).thenReturn(Optional.of(existingProduct));
-        when(productRepository.save(any(Product.class))).thenReturn(updatedProduct);
-
-        // When:
-        ProductDto result = productService.updateProductStock(productId, newQuantity);
-
-        // Then:
-        assertNotNull(result);
-        assertEquals(newQuantity, result.stock());
-        assertEquals(productId, result.id());
-        assertEquals("Elektronik", result.category());
-        assertEquals(true, result.active());
-
-        verify(productRepository).findById(productId);
-        verify(productRepository).save(any(Product.class));
+        assertThatThrownBy(() -> productService.createProduct(request))
+                .isInstanceOf(ProductAlreadyExistsException.class);
     }
 
     @Test
-    void testUpdateProductStock_shouldThrowProductNotFoundException_whenProductDoesNotExist() {
-        // Given:
-        Long nonExistentProductId = 99L;
-        Integer quantity = 20;
+    void getProductById_successful() {
+        Product product = Product.builder().id(1L).name("Product A").category("Category A").price(BigDecimal.TEN).stock(5).active(true).build();
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
 
-        // Mock davranışını tanımla:
-        when(productRepository.findById(nonExistentProductId)).thenReturn(Optional.empty());
+        ProductDto result = productService.getProductById(1L);
 
-        // When & Then:
-        assertThrows(ProductNotFoundException.class, () ->
-                productService.updateProductStock(nonExistentProductId, quantity)
-        );
-
-        verify(productRepository).findById(nonExistentProductId);
-        verify(productRepository, never()).save(any(Product.class));
+        assertThat(result.name()).isEqualTo("Product A");
     }
 
     @Test
-    void testGetProductById_shouldReturnProductDto_whenProductExists() {
-        // Given
-        Long productId = 1L;
-        Product product = Product.builder()
-                .id(productId)
-                .name("Laptop")
-                .price(BigDecimal.valueOf(1200.00))
-                .stock(5)
-                .category("Elektronik")
-                .active(true)
-                .build();
+    void getProductById_notFound() {
+        when(productRepository.findById(1L)).thenReturn(Optional.empty());
 
-        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
-
-        // When
-        ProductDto result = productService.getProductById(productId);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(productId, result.id());
-        assertEquals("Laptop", result.name());
-        assertEquals("Elektronik", result.category());
-        assertEquals(true, result.active());
-        verify(productRepository).findById(productId);
+        assertThatThrownBy(() -> productService.getProductById(1L))
+                .isInstanceOf(ProductNotFoundException.class);
     }
 
     @Test
-    void testGetProductById_shouldThrowProductNotFoundException_whenProductDoesNotExist() {
-        // Given
-        Long productId = 99L;
-        when(productRepository.findById(productId)).thenReturn(Optional.empty());
+    void getAllProducts_returnsPagedList() {
+        Product product = Product.builder().id(1L).name("Product A").category("Category A").price(BigDecimal.TEN).stock(5).active(true).build();
+        Page<Product> page = new PageImpl<>(List.of(product));
 
-        // When & Then
-        assertThrows(ProductNotFoundException.class, () -> productService.getProductById(productId));
-        verify(productRepository).findById(productId);
+        when(productRepository.findAll(any(Pageable.class))).thenReturn(page);
+
+        Page<ProductDto> result = productService.getAllProducts(PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).hasSize(1);
+    }
+
+    @Test
+    void getProductsByCategory_returnsPagedList() {
+        Product product = Product.builder().id(1L).name("Product A").category("Electronics").price(BigDecimal.TEN).stock(5).active(true).build();
+        Page<Product> page = new PageImpl<>(List.of(product));
+
+        when(productRepository.findAllByCategoryAndActiveTrue(eq("Electronics"), any(Pageable.class))).thenReturn(page);
+
+        Page<ProductDto> result = productService.getProductsByCategory("Electronics", PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).hasSize(1);
+    }
+
+    @Test
+    void updateProduct_successful() {
+        Product existing = Product.builder().id(1L).name("Old Name").category("Cat").price(BigDecimal.TEN).stock(3).active(true).build();
+        UpdateProductRequest request = new UpdateProductRequest("New Name", "Cat", BigDecimal.valueOf(50), 15, true);
+
+        when(productRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(productRepository.findByNameContainingIgnoreCase("New Name")).thenReturn(Collections.emptyList());
+        when(productRepository.save(any(Product.class))).thenReturn(existing);
+
+        ProductDto result = productService.updateProduct(1L, request);
+
+        assertThat(result.name()).isEqualTo("New Name");
+    }
+
+    @Test
+    void updateProduct_nameConflict_throwsException() {
+        Product existing = Product.builder().id(1L).name("Old Name").build();
+        Product other = Product.builder().name("New Name").build();
+        UpdateProductRequest request = new UpdateProductRequest("New Name", "Cat", BigDecimal.TEN, 5, true);
+
+        when(productRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(productRepository.findByNameContainingIgnoreCase("New Name")).thenReturn(List.of(other));
+
+        assertThatThrownBy(() -> productService.updateProduct(1L, request))
+                .isInstanceOf(ProductAlreadyExistsException.class);
+    }
+
+    @Test
+    void deleteProduct_successful() {
+        when(productRepository.existsById(1L)).thenReturn(true);
+        productService.deleteProduct(1L);
+        verify(productRepository).deleteById(1L);
+    }
+
+    @Test
+    void deleteProduct_notFound_throwsException() {
+        when(productRepository.existsById(1L)).thenReturn(false);
+        assertThatThrownBy(() -> productService.deleteProduct(1L))
+                .isInstanceOf(ProductNotFoundException.class);
+    }
+
+    @Test
+    void updateProductStock_successful() {
+        Product product = Product.builder().id(1L).stock(10).build();
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(productRepository.save(any(Product.class))).thenReturn(product);
+
+        ProductDto result = productService.updateProductStock(1L, 20);
+
+        assertThat(result.stock()).isEqualTo(20);
+    }
+
+    @Test
+    void updateProductStock_negativeQuantity_throwsException() {
+        Product product = Product.builder().id(1L).stock(10).build();
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+
+        assertThatThrownBy(() -> productService.updateProductStock(1L, -5))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        closeable.close();
+    }
+
+    public static class FakeAuthentication implements Authentication {
+
+        @Override
+        public Collection<? extends GrantedAuthority> getAuthorities() {
+            return null;
+        }
+
+        @Override
+        public Object getCredentials() {
+            return "credentials";
+        }
+
+        @Override
+        public Object getDetails() {
+            return null;
+        }
+
+        @Override
+        public Object getPrincipal() {
+            return "emre@example.com";
+        }
+
+        @Override
+        public boolean isAuthenticated() {
+            return true;
+        }
+
+        @Override
+        public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException {}
+
+        @Override
+        public String getName() {
+            return "emre@example.com";
+        }
     }
 }
