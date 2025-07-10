@@ -72,7 +72,6 @@ PUT /{id}/status: Belirli bir siparişin durumunu günceller. (ADMIN Yetkisi Ger
 
 DELETE /{id}: Belirli bir siparişi iptal eder (stokları geri ekler). (USER/ADMIN Yetkisi Gerekli)
 
-DELETE /{id}/admin: Belirli bir siparişi veritabanından tamamen siler. (ADMIN Yetkisi Gerekli)
 
 3. Kullanıcı İşlemleri (/api/v1/auth, /api/v1/users)
 POST /api/v1/auth/register: Yeni bir kullanıcı kaydı yapar.
