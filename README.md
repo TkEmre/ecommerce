@@ -80,9 +80,13 @@ POST /api/v1/auth/login: Kullanıcı girişi yapar ve JWT token döndürür.
 
 GET /api/v1/users/profile: Kimliği doğrulanmış kullanıcının profil bilgilerini getirir.
 
+GET /api/v1/users/all: Bütün kullanıcıları döndürür.
+
 PUT /api/v1/users/profile: Kimliği doğrulanmış kullanıcının profil bilgilerini günceller.
 
 POST /api/v1/users/address: Kimliği doğrulanmış kullanıcıya yeni bir adres ekler.
+
+POST /api/v1/auth/logout: Çıkış yapar JWT token blackliste alınır.
 
 ⚙️ Kurulum ve Çalıştırma
 Ön Koşullar
@@ -166,7 +170,7 @@ Projenin geliştirilmesine katkıda bulunmak isterseniz, lütfen bir "pull reque
 Bu proje MIT Lisansı altında lisanslanmıştır. Daha fazla bilgi için LICENSE dosyasına bakın.
 
 ✉️ İletişim
-Adınız Soyadınız: Emre Tek
+Emre Tek
 
 E-posta: emretek443@gmail.com
 
